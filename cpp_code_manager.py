@@ -5,8 +5,6 @@
 # Create a python project from the template in this directory
 
 import os
-import re
-import shutil
 from operator import itemgetter
 
 import code_manager
@@ -14,6 +12,7 @@ import m_code_manager.util.files as files
 
 
 LANG_IDENTIFIERS = ["cpp", "c++"]
+
 
 class CppCodeManager(code_manager.CodeManager):
 
@@ -27,28 +26,23 @@ class CppCodeManager(code_manager.CodeManager):
             'FILE_MAKE_VARIABLES':          "var.make",
     }
 
-
     def __init__(self):
         # why passing the language to the base class init? See (way too 
         # extensive) comment in python_code_manager
         super().__init__("cpp")
-
 
     def _command_main(self, **kwargs):
 
         ##############################
         # PROJECT DIRECTORIES
         ##############################
-        
+
         project_dirs = itemgetter(
                 'DIR_SRC', 'DIR_INCLUDE',
                 )(self.PLACEHOLDERS)
         for directory in project_dirs:
             # comments: hdl_code_manager.py
-            try:
-                os.mkdir(directory)
-            except:
-                pass
+            files.create_dir(directory)
 
         s_target_file = os.path.join(
                     self.PLACEHOLDERS['DIR_SRC'], "main.cpp")
@@ -56,9 +50,8 @@ class CppCodeManager(code_manager.CodeManager):
             template_out = self._load_template("main")
             self._write_template(template_out, s_target_file)
 
-
     def _command_project(self, app_name="", enable_cuda=False, empty=False,
-                                enable_vimspector=False, **kwargs):
+                         enable_vimspector=False, **kwargs):
         '''
         :app_name: if not specified, it is assumed to be the project directory name
         :empty: don't generate a hello world main.cpp
@@ -87,22 +80,6 @@ class CppCodeManager(code_manager.CodeManager):
         # TEMPLATES
         ##############################
 
-#         # MAKEFILE
-#         s_target_file = "makefile"
-#         if self._check_target_edit_allowed(s_target_file):
-#             template_out = self._load_template("makefile", dict_placeholders={
-#                         "APP_NAME": app_name,
-#                         })
-#             self._write_template(template_out, s_target_file)
-
-#         # MAKEFILE VARIABLES
-#         s_target_file = self.PLACEHOLDERS["FILE_MAKE_VARIABLES"]
-#         if self._check_target_edit_allowed(s_target_file):
-#             template_out = self._load_template("make_var", dict_placeholders={
-#                         "APP_NAME": app_name,
-#                         })
-#             self._write_template(template_out, s_target_file)
-
         # CMAKELISTS
         if enable_cuda:
             s_enable_cuda = \
@@ -121,7 +98,7 @@ class CppCodeManager(code_manager.CodeManager):
 "else ()
 "    message(\"Could not find CUDA support. Disabling CUDA sources.\")
 "endif ()"""
-            
+
             s_add_executable = "add_executable(${PROJECT_NAME} ${CPP_SRCS} ${CUDA_SRCS})"
 
         else:
@@ -145,10 +122,6 @@ class CppCodeManager(code_manager.CodeManager):
         if enable_vimspector:
             self._command_vimspector(app_name)
 
-#         # GITIGNORE
-#         self._command_gitignore()
-
-
     def _command_vimspector(self, app_name="", **kwargs):
 
         if not app_name:
@@ -161,18 +134,3 @@ class CppCodeManager(code_manager.CodeManager):
                             "APP_NAME": app_name,
                             })
             self._write_template(template_out, s_target_file)
-
-
-#     def _command_gitignore(self, **kwargs):
-# 
-#         s_target_file = ".gitignore"
-# 
-#         if self._check_target_edit_allowed(s_target_file):
-#             template_out = self._load_template("gitignore")
-#             self._write_template(template_out, s_target_file)
-
-
-#         template_out = list(map(
-#             lambda s: s.replace("_TT_CWD_TT_", f"{os.getcwd()}/debug"), template
-#             ))
-
