@@ -10,6 +10,8 @@ import shutil
 from operator import itemgetter
 
 import code_manager
+import m_code_manager.util.files as files
+
 
 LANG_IDENTIFIERS = ["cpp", "c++"]
 
@@ -58,8 +60,8 @@ class CppCodeManager(code_manager.CodeManager):
     def _command_project(self, app_name="", enable_cuda=False, empty=False,
                                 enable_vimspector=False, **kwargs):
         '''
-        If app_name is not specified, it is assumed to be the project directory name
-        empty - don't generate a hello world main.cpp
+        :app_name: if not specified, it is assumed to be the project directory name
+        :empty: don't generate a hello world main.cpp
         '''
         # TODO: git option
 
@@ -67,43 +69,39 @@ class CppCodeManager(code_manager.CodeManager):
         # PROJECT DIRECTORIES
         ##############################
 
-        try:
-            os.mkdir(self.PLACEHOLDERS['DIR_BUILD'])
-        except:
-            pass
+        if app_name:
+            files.create_dir(app_name)
+            os.chdir(app_name)
+        if not app_name:
+            app_name = os.path.basename(os.getcwd())
+
+        files.create_dir(self.PLACEHOLDERS['DIR_BUILD'])
 
         project_dirs = itemgetter(
                 'DIR_DEBUG', 'DIR_RELEASE', 'DIR_MAXOPT',
                 )(self.PLACEHOLDERS)
         for directory in project_dirs:
-            # comments: hdl_code_manager.py
-            try:
-                os.mkdir(os.path.join(self.PLACEHOLDERS['DIR_BUILD'], directory))
-            except:
-                pass
-
-        if not app_name:
-            app_name = os.path.basename(os.getcwd())
+            files.create_dir(os.path.join(self.PLACEHOLDERS['DIR_BUILD'], directory))
 
         ##############################
         # TEMPLATES
         ##############################
 
-        # MAKEFILE
-        s_target_file = "makefile"
-        if self._check_target_edit_allowed(s_target_file):
-            template_out = self._load_template("makefile", dict_placeholders={
-                        "APP_NAME": app_name,
-                        })
-            self._write_template(template_out, s_target_file)
+#         # MAKEFILE
+#         s_target_file = "makefile"
+#         if self._check_target_edit_allowed(s_target_file):
+#             template_out = self._load_template("makefile", dict_placeholders={
+#                         "APP_NAME": app_name,
+#                         })
+#             self._write_template(template_out, s_target_file)
 
-        # MAKEFILE VARIABLES
-        s_target_file = self.PLACEHOLDERS["FILE_MAKE_VARIABLES"]
-        if self._check_target_edit_allowed(s_target_file):
-            template_out = self._load_template("make_var", dict_placeholders={
-                        "APP_NAME": app_name,
-                        })
-            self._write_template(template_out, s_target_file)
+#         # MAKEFILE VARIABLES
+#         s_target_file = self.PLACEHOLDERS["FILE_MAKE_VARIABLES"]
+#         if self._check_target_edit_allowed(s_target_file):
+#             template_out = self._load_template("make_var", dict_placeholders={
+#                         "APP_NAME": app_name,
+#                         })
+#             self._write_template(template_out, s_target_file)
 
         # CMAKELISTS
         if enable_cuda:
@@ -147,8 +145,8 @@ class CppCodeManager(code_manager.CodeManager):
         if enable_vimspector:
             self._command_vimspector(app_name)
 
-        # GITIGNORE
-        self._command_gitignore()
+#         # GITIGNORE
+#         self._command_gitignore()
 
 
     def _command_vimspector(self, app_name="", **kwargs):
@@ -165,13 +163,13 @@ class CppCodeManager(code_manager.CodeManager):
             self._write_template(template_out, s_target_file)
 
 
-    def _command_gitignore(self, **kwargs):
-
-        s_target_file = ".gitignore"
-
-        if self._check_target_edit_allowed(s_target_file):
-            template_out = self._load_template("gitignore")
-            self._write_template(template_out, s_target_file)
+#     def _command_gitignore(self, **kwargs):
+# 
+#         s_target_file = ".gitignore"
+# 
+#         if self._check_target_edit_allowed(s_target_file):
+#             template_out = self._load_template("gitignore")
+#             self._write_template(template_out, s_target_file)
 
 
 #         template_out = list(map(
